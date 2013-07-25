@@ -34,12 +34,11 @@
 
 ;;; Commentary:
 
-;; Extensions to `package.el` for Emacs 24 and later.
+;; Provides extensions to `package.el` for Emacs 24 and later.
 
-;; Declares a package manifest that should be installed on this
-;; system. Will remove any installed packages that are no longer in
-;; the MANIFEST. Will install any packages in MANIFEST that aren't
-;; installed already.
+;; Declares a manifest of packages that should be installed on this
+;; system, installing any missing packages and removing any installed
+;; packages that are not in the manifest.
 ;;
 ;; This makes it easy to keep a list of packages under version control
 ;; and replicated across all your environments, without having to have
@@ -55,6 +54,14 @@
 ;;                      'ruby-mode
 ;;                      'ssh
 ;;                      'window-number)
+
+;;; Note:
+
+;; package-version-for, package-delete-by-name, package-maybe-install,
+;; and package-cleanup are all going to be submitted upstream to
+;; emacs. They're in here and only defined if package-cleanup is not
+;; already defined. If my contributions get accepted upstream, they'll
+;; be deleted here at some point.
 
 ;;; Code:
 
@@ -83,10 +90,9 @@
       (mapc 'package-delete-by-name removes))))
 
 (defun package-manifest (&rest manifest)
-  "Declares a package manifest that should be installed on this
-system. Will remove any installed packages that are no longer in
-the MANIFEST. Will install any packages in MANIFEST that aren't
-installed already.
+  "Declares a MANIFEST of packages that should be installed on this
+system, installing any missing packages and removing any installed
+packages that are not in the manifest.
 
 This makes it easy to keep a list of packages under version
 control and replicated across all your environments, without
