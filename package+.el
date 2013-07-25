@@ -104,9 +104,9 @@ control."
     (package-refresh-contents))
 
   (condition-case err
-      (mapc 'package-maybe-install packages)
+      (mapc 'package-maybe-install manifest)
     (error (message "Couldn't install package: %s" err)))
-  (package-cleanup packages))
+  (package-cleanup manifest))
 
 (provide 'package+)
 
