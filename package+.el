@@ -58,10 +58,11 @@
 ;;; Note:
 
 ;; package-version-for, package-delete-by-name, package-maybe-install,
-;; and package-cleanup are all going to be submitted upstream to
-;; emacs. They're in here and only defined if package-cleanup is not
-;; already defined. If my contributions get accepted upstream, they'll
-;; be deleted here at some point.
+;; package-cleanup, package-deps-for, and package-transitive-closure
+;; are all going to be submitted upstream to emacs. They're in here
+;; and only defined if package-cleanup is not already defined. If my
+;; contributions get accepted upstream, they'll be deleted here at
+;; some point.
 
 ;;; Code:
 
@@ -74,6 +75,7 @@
 
   (defun package-delete-by-name (name)
     "Deletes a package by NAME"
+    (message "Removing %s" name)
     (package-delete (symbol-name name)
                     (package-version-join (package-version-for name))))
 
@@ -84,9 +86,23 @@
           (message "Installing %s" name)
           (package-install name))))
 
+  (defun package-deps-for (pkg)
+    "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
+    (let ((v (cdr (assoc pkg package-alist))))
+      (and v (package-desc-reqs v))))
+
+  (defun package-transitive-closure (pkgs)
+    (let ((deps '()))
+      (dolist (pkg pkgs)
+        (add-to-list 'deps pkg)
+        (dolist (new-pkg (mapcar 'car (package-deps-for pkg)))
+          (add-to-list 'deps new-pkg)))
+      deps))
+
   (defun package-cleanup (packages)
     "Delete installed packages not explicitly declared in PACKAGES."
-    (let ((removes (set-difference (mapcar 'car package-alist) packages)))
+    (let ((removes (set-difference (mapcar 'car package-alist)
+                                   (package-transitive-closure packages))))
       (mapc 'package-delete-by-name removes))))
 
 (defun package-manifest (&rest manifest)
@@ -103,10 +119,11 @@ control."
   (unless package-archive-contents      ; why? package-install has this.
     (package-refresh-contents))
 
-  (condition-case err
-      (mapc 'package-maybe-install manifest)
-    (error (message "Couldn't install package: %s" err)))
-  (package-cleanup manifest))
+  (let ((tc-manifest (package-transitive-closure manifest)))
+    (condition-case err
+        (mapc 'package-maybe-install tc-manifest)
+      (error (message "Couldn't install package: %s" err)))
+    (package-cleanup tc-manifest)))
 
 (provide 'package+)
 
