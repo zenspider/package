@@ -81,10 +81,9 @@
 
   (defun package-maybe-install (name)
     "Installs a package by NAME, but only if it isn't already installed."
-    (or (package-installed-p name)
-        (progn
-          (message "Installing %s" name)
-          (package-install name))))
+    (unless (package-installed-p name)
+      (message "Installing %s" name)
+      (package-install name)))
 
   (defun package-deps-for (pkg)
     "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
@@ -93,11 +92,10 @@
 
   (defun package-transitive-closure (pkgs)
     (let ((deps '()))
-      (dolist (pkg pkgs)
+      (dolist (pkg pkgs deps)
         (add-to-list 'deps pkg)
         (dolist (new-pkg (mapcar 'car (package-deps-for pkg)))
-          (add-to-list 'deps new-pkg)))
-      deps))
+          (add-to-list 'deps new-pkg)))))
 
   (defun package-cleanup (packages)
     "Delete installed packages not explicitly declared in PACKAGES."
@@ -106,9 +104,10 @@
       (mapc 'package-delete-by-name removes))))
 
 (defun package-manifest (&rest manifest)
-  "Declares a MANIFEST of packages that should be installed on this
-system, installing any missing packages and removing any installed
-packages that are not in the manifest.
+  "Ensures MANIFEST is installed and uninstalls other packages.
+MANIFEST declares a list of packages that should be installed on
+this system, installing any missing packages and removing any
+installed packages that are not in the manifest.
 
 This makes it easy to keep a list of packages under version
 control and replicated across all your environments, without
