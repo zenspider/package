@@ -103,6 +103,7 @@
                                    (package-transitive-closure packages))))
       (mapc 'package-delete-by-name removes))))
 
+;;;###autoload
 (defun package-manifest (&rest manifest)
   "Ensures MANIFEST is installed and uninstalls other packages.
 MANIFEST declares a list of packages that should be installed on
