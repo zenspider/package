@@ -3,6 +3,8 @@
 ;; Copyright (C) 2013  Ryan Davis
 
 ;; Author: Ryan Davis <ryand-ruby@zenspider.com>
+;;         Mattias Bengtsson <mattias.jc.bengtsson@gmail.com>
+;; Version: 20131111.24
 ;; Keywords: extensions, tools
 ;; Package-Requires: ()
 ;; URL: TBA
@@ -44,23 +46,9 @@
 ;; and replicated across all your environments, without having to have
 ;; all the packages themselves under version control.
 ;;
-;; Example:
+;; Just add the following snippet to your .emacs:
+;;   (add-hook 'after-init-hook 'package-sync)
 ;;
-;;    (package-initialize)
-;;    (add-to-list 'package-archives
-;;      '("melpa" . "http://melpa.milkbox.net/packages/") t)
-;;    (unless (package-installed-p 'package+)
-;;      (package-install 'package+))
-;;
-;;    (package-manifest 'ag
-;;                      'expand-region
-;;                      'magit
-;;                      'melpa
-;;                      'package+
-;;                      'paredit
-;;                      'ruby-mode
-;;                      'ssh
-;;                      'window-number)
 
 ;;; Note:
 
@@ -110,27 +98,66 @@
                                    (package-transitive-closure packages))))
       (mapc 'package-delete-by-name removes))))
 
+(defgroup package-manifest nil
+  "A list of packages that should be installed on
+this system. The package-manifest-sync function will try to install any package
+on this list and uninstall all other packages."
+  :group 'applications)
+
+;; TODO: Investigate Variable Definitions
+;; http://www.gnu.org/software/emacs/manual/html_node/elisp/Variable-Definitions.html
+;; Specifically :initialize to see if it is possible to initialize this to the list of
+;; currently installed packages.
+(defcustom package-manifest nil
+  "A list of packages that the user expects to have installed.
+The package-manifest-sync function will try to install any package on
+this list and also uninstall any external package not on this list."
+  :type 'list
+  :group 'package-manifest)
+
 ;;;###autoload
-(defun package-manifest (&rest manifest)
-  "Ensures MANIFEST is installed and uninstalls other packages.
-MANIFEST declares a list of packages that should be installed on
-this system, installing any missing packages and removing any
-installed packages that are not in the manifest.
+(defadvice package-install (after package-manifest-install-advice activate)
+  (package--add-to-manifest (symbol-name (ad-get-arg 0)))
+)
+;;;###autoload
+(defadvice package-delete (after package-manifest-uninstall-advice activate)
+  (package--remove-from-manifest (ad-get-arg 0))
+)
+;;;###autoload
+(defun package--add-to-manifest (pkg-name)
+  (unless (member pkg-name package-manifest)
+    (customize-save-variable 'package-manifest (cons pkg-name package-manifest)))
+  (message (concat "Added " pkg-name " to package manifest"))
+)
+;;;###autoload
+(defun package--remove-from-manifest (pkg-name)
+  (customize-save-variable 'package-manifest (delq pkg-name package-manifest))
+  (message (concat "Removed " pkg-name " from package manifest"))
+)
+
+;;;###autoload
+(defun package-sync ()
+  "Ensures the packages in the custom variable package-manifest
+is installed and uninstalls all other packages.
 
 This makes it easy to keep a list of packages under version
 control and replicated across all your environments, without
 having to have all the packages themselves under version
 control."
+  (interactive)
   (package-initialize)
 
   (unless package-archive-contents      ; why? package-install has this.
     (package-refresh-contents))
 
-  (let ((tc-manifest (package-transitive-closure manifest)))
+  (let ((tc-manifest (package-transitive-closure (mapcar 'intern package-manifest))))
     (condition-case err
         (mapc 'package-maybe-install tc-manifest)
       (error (message "Couldn't install package: %s" err)))
-    (package-cleanup tc-manifest)))
+    (package-cleanup tc-manifest))
+
+  (unless package-archive-contents      ; why? package-install has this.
+    (package-refresh-contents)))
 
 (provide 'package+)
 
