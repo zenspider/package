@@ -94,7 +94,9 @@
 
   (defun package-deps-for (pkg)
     "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
-    (let ((v (cdr (assoc pkg package-alist))))
+    (unless package-archive-contents
+      (package-refresh-contents))
+    (let ((v (cdr (assoc pkg package-archive-contents))))
       (and v (package-desc-reqs v))))
 
   (defun package-transitive-closure (pkgs)
