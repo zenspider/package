@@ -100,11 +100,15 @@
       (and v (package-desc-reqs v))))
 
   (defun package-transitive-closure (pkgs)
-    (let ((deps '()))
-      (dolist (pkg pkgs deps)
-        (add-to-list 'deps pkg)
-        (dolist (new-pkg (mapcar 'car (package-deps-for pkg)))
-          (add-to-list 'deps new-pkg)))))
+    "Return a list of dependencies for PKGS, including dependencies of dependencies."
+    (let ((prev)
+          (deps pkgs))
+      (while (not (equal prev deps))
+        (setq prev deps)
+        (dolist (pkg deps)
+          (dolist (new-pkg (mapcar 'car (package-deps-for pkg)))
+            (add-to-list 'deps new-pkg))))
+      deps))
 
   (defun package-cleanup (packages)
     "Delete installed packages not explicitly declared in PACKAGES."
@@ -128,11 +132,10 @@ control."
   (unless package-archive-contents      ; why? package-install has this.
     (package-refresh-contents))
 
-  (let ((tc-manifest (package-transitive-closure manifest)))
-    (condition-case err
-        (mapc 'package-maybe-install tc-manifest)
-      (error (message "Couldn't install package: %s" err)))
-    (package-cleanup tc-manifest)))
+  (condition-case err
+      (mapc 'package-maybe-install (package-transitive-closure manifest))
+    (error (message "Couldn't install package: %s" err)))
+  (package-cleanup manifest))
 
 (provide 'package+)
 
