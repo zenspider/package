@@ -75,6 +75,12 @@
 
 (require 'package)
 
+(unless (fboundp 'package-desc-vers)
+  ;; TODO? several of my installed packages, like melpa, require this on 24.4
+  (defsubst package-desc-vers (desc)
+    "Extract version from a package description vector."
+    (aref desc 0)))
+
 (unless (fboundp 'package-cleanup)
   (require 'cl)
 
