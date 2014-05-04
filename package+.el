@@ -73,6 +73,8 @@
 
 ;;; Code:
 
+(require 'package)
+
 (unless (fboundp 'package-cleanup)
   (require 'cl)
 
