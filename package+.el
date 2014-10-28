@@ -84,9 +84,15 @@
 (unless (fboundp 'package-cleanup)
   (require 'cl)
 
+  (defun package-details-for (name)
+    (let ((v (cdr (assoc name package-archive-contents))))
+      (and v (if (consp v)
+                 (car v)                ; emacs 24+
+               v))))                    ; emacs 23
+
   (defun package-version-for (name)
     "Returns the installed version for a package with a given NAME."
-    (package-desc-vers (cdr (assoc name package-alist))))
+    (package-desc-vers (package-details-for name)))
 
   (defun package-delete-by-name (name)
     "Deletes a package by NAME"
@@ -104,7 +110,7 @@
     "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
     (unless package-archive-contents
       (package-refresh-contents))
-    (let ((v (cdr (assoc pkg package-archive-contents))))
+    (let ((v (package-details-for pkg)))
       (and v (package-desc-reqs v))))
 
   (defun package-transitive-closure (pkgs)
