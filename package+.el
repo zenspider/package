@@ -1,13 +1,13 @@
 ;;; package+.el --- Extensions for the package library.
 
-;; Copyright (C) 2013  Ryan Davis
+;; Copyright (C) Ryan Davis
 
 ;; Author: Ryan Davis <ryand-ruby@zenspider.com>
 ;; Keywords: extensions, tools
 ;; Package-Requires: ()
 ;; URL: TBA
 ;; Doc URL: TBA
-;; Compatibility: GNU Emacs: 23.x?, 24.x
+;; Compatibility: GNU Emacs: 24.3?, 24.4
 
 ;;; The MIT License:
 
