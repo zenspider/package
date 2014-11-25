@@ -75,9 +75,9 @@
 
 (require 'package)
 
-(unless (fboundp 'package-desc-vers)
-  ;; TODO? several of my installed packages, like melpa, require this on 24.4
-  (defsubst package-desc-vers (desc)
+(unless (fboundp 'package-desc-version)
+  ;; provide compatibilty back to 24.3--hopefully.
+  (defsubst package-desc-version (desc)
     "Extract version from a package description vector."
     (aref desc 0)))
 
@@ -85,20 +85,19 @@
   (require 'cl)
 
   (defun package-details-for (name)
-    (let ((v (cdr (assoc name package-archive-contents))))
+    (let ((v (cdr (assoc name (append package-alist package-archive-contents)))))
       (and v (if (consp v)
                  (car v)                ; emacs 24+
                v))))                    ; emacs 23
 
   (defun package-version-for (name)
     "Returns the installed version for a package with a given NAME."
-    (package-desc-vers (package-details-for name)))
+    (package-desc-version (package-details-for name)))
 
   (defun package-delete-by-name (name)
     "Deletes a package by NAME"
     (message "Removing %s" name)
-    (package-delete (symbol-name name)
-                    (package-version-join (package-version-for name))))
+    (package-delete (package-details-for name)))
 
   (defun package-maybe-install (name)
     "Installs a package by NAME, but only if it isn't already installed."
