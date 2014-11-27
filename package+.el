@@ -84,6 +84,11 @@
 (unless (fboundp 'package-cleanup)
   (require 'cl)
 
+  (defcustom package-manifest-cleanup t
+    "If true, installed packages which are not listed in the manifest will be deleted."
+    :group 'package+
+    :type 'boolean)
+
   (defun package-details-for (name)
     (let ((v (cdr (assoc name (append package-alist package-archive-contents)))))
       (and v (if (consp v)
@@ -148,7 +153,8 @@ control."
   (condition-case err
       (mapc 'package-maybe-install (package-transitive-closure manifest))
     (error (message "Couldn't install package: %s" err)))
-  (package-cleanup manifest))
+  (when package-manifest-cleanup
+    (package-cleanup manifest)))
 
 (provide 'package+)
 
