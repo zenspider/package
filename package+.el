@@ -73,9 +73,9 @@
 
 ;; If automatic package cleanup is not desired (for example, if you have
 ;; locally-installed packages you want to keep), you can disable this
-;; functionality by setting disable-package-cleanup, like so:
+;; functionality by setting package-disable-cleanup, like so:
 ;; 
-;;    (setq disable-package-cleanup 1)
+;;    (setq package-disable-cleanup 1)
 ;;    (package manifest 'foo
 ;;                      'bar
 ;;                      ... )
@@ -157,7 +157,7 @@ control."
   (condition-case err
       (mapc 'package-maybe-install (package-transitive-closure manifest))
     (error (message "Couldn't install package: %s" err)))
-  (if (boundp 'disable-package-cleanup) () (package-cleanup manifest)))
+  (unless (boundp 'package-disable-cleanup) (package-cleanup manifest)))
 
 (provide 'package+)
 
