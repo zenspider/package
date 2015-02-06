@@ -71,6 +71,15 @@
 ;; contributions get accepted upstream, they'll be deleted here at
 ;; some point.
 
+;; If automatic package cleanup is not desired (for example, if you have
+;; locally-installed packages you want to keep), you can disable this
+;; functionality by setting disable-package-cleanup, like so:
+;; 
+;;    (setq disable-package-cleanup 1)
+;;    (package manifest 'foo
+;;                      'bar
+;;                      ... )
+
 ;;; Code:
 
 (require 'package)
@@ -148,7 +157,7 @@ control."
   (condition-case err
       (mapc 'package-maybe-install (package-transitive-closure manifest))
     (error (message "Couldn't install package: %s" err)))
-  (package-cleanup manifest))
+  (if (boundp 'disable-package-cleanup) () (package-cleanup manifest)))
 
 (provide 'package+)
 
