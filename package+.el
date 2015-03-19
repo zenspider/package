@@ -64,6 +64,9 @@
 
 ;;; Note:
 
+;; Call (package-refresh-contents) before running (package-manifest ...)
+;; if you want to ensure you're using the latest package data.
+
 ;; package-version-for, package-delete-by-name, package-maybe-install,
 ;; package-cleanup, package-deps-for, and package-transitive-closure
 ;; are all going to be submitted upstream to emacs. They're in here
