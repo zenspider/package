@@ -77,9 +77,9 @@
 ;; If automatic package cleanup is not desired (for example, if you have
 ;; locally-installed packages you want to keep), you can disable this
 ;; functionality by setting package-disable-cleanup, like so:
-;; 
+;;
 ;;    (setq package-disable-cleanup 1)
-;;    (package manifest 'foo
+;;    (package-manifest 'foo
 ;;                      'bar
 ;;                      ... )
 
