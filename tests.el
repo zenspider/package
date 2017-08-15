@@ -1,5 +1,12 @@
 (load-file "package+.el")
 
+(setq package-archives (remove (assoc "gnu" package-archives) package-archives))
+(dolist (repo '(("melpa-stable" . "http://stable.melpa.org/packages/")))
+  (add-to-list 'package-archives repo))
+
+(setq package-enable-at-startup nil)
+(package-initialize)
+
 (require 'ert)
 
 (local-set-key (kbd "C-c C-r")
