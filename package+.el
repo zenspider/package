@@ -140,7 +140,7 @@
 
   (defun package-transitive-closure (pkgs)
     (car
-     (topological-sort
+     (package+/topological-sort
       (mapcar 'map-to-package-deps
               (sort (delete-duplicates
                      (flatten (mapcar 'map-to-package-deps pkgs)))
@@ -172,7 +172,7 @@
      'symbol-list<))
 
   (defun topo (lst)
-    (car (topological-sort lst)))
+    (car (package+/topological-sort lst)))
 
   (defun package-cleanup (packages)
     "Delete installed packages not explicitly declared in PACKAGES."
@@ -210,7 +210,7 @@ control."
 
 ;; stolen (and modified) from:
 ;; https://github.com/dimitri/el-get/blob/master/el-get-dependencies.el
-(defun topological-sort (graph)
+(defun package+/topological-sort (graph)
   (let* ((entries (make-hash-table))
          ;; avoid obsolete `flet' & backward-incompatible `cl-flet'
          (entry (lambda (v)
