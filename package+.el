@@ -96,6 +96,10 @@
 (unless (fboundp 'package-cleanup)
   (require 'cl)
 
+  (defun symbol< (a b) (string< (symbol-name a) (symbol-name b)))
+
+  (defun symbol-list< (a b) (symbol< (car a) (car b)))
+
   (defun package-details-for (name)
     (let ((v (cdr (assoc name (append package-alist package-archive-contents)))))
       (and v (if (consp v)
@@ -203,10 +207,6 @@ control."
   (mapc 'package-maybe-install (package-transitive-closure manifest))
 
   (unless (boundp 'package-disable-cleanup) (package-cleanup manifest)))
-
-(defun symbol< (a b) (string< (symbol-name a) (symbol-name b)))
-
-(defun symbol-list< (a b) (symbol< (car a) (car b)))
 
 ;; stolen (and modified) from:
 ;; https://github.com/dimitri/el-get/blob/master/el-get-dependencies.el
