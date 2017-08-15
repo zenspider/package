@@ -148,7 +148,7 @@
   (should (equal '(20170617 1942)       ; FIX this will fail quickly w/o fixtures
                  (package-version-for 'racket-mode))))
 
-(ert-deftest test-topological-sort ()
+(ert-deftest test-package+/topological-sort ()
   (setq deps '((ag cl-lib dash s)
                (dash)
                (gh dash emacs logito marshal pcache s)
@@ -157,7 +157,7 @@
                (marshal eieio ht json)
                (pcache eieio)
                (s)))
-  (should (equal (car (topological-sort deps))
+  (should (equal (car (package+/topological-sort deps))
                  '(cl-lib dash ht s ag emacs eieio logito pcache json marshal gh))))
 
 (ert-deftest test-symbol< ()
