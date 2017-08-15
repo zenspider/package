@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: silex/emacs:24
+      - image: silex/emacs:25
     working_directory: ~/package+
     steps:
       - checkout
