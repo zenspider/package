@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: silex/emacs:25
+      - image: zenspider/emacs-ruby:latest
     working_directory: ~/package+
     steps:
       - checkout
