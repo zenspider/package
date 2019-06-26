@@ -1,4 +1,4 @@
-;;; package+.el --- Extensions for the package library.
+;;; package+.el --- Extensions for the package library.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) Ryan Davis
 
@@ -76,16 +76,30 @@
 
 ;; If automatic package cleanup is not desired (for example, if you have
 ;; locally-installed packages you want to keep), you can disable this
-;; functionality by setting package-disable-cleanup, like so:
+;; functionality by setting package-disable-cleanup to t.
 ;;
-;;    (setq package-disable-cleanup 1)
 ;;    (package-manifest 'foo
 ;;                      'bar
 ;;                      ... )
 
+;; If automatic updating of package-selected-packages is not desired
+;; (for example, if you have manually-installed packages you want to
+;; keep), you can disable this functionality by setting
+;; package-disable-record to t.
+
 ;;; Code:
 
 (require 'package)
+
+(defcustom package-disable-cleanup nil
+  "Disable automatic cleanup of undeclared packages and their dependencies."
+  :type 'boolean
+  :group 'package+)
+
+(defcustom package-disable-record nil
+  "Disable automatic recording of declared packages in ‘package-selected-packages’."
+  :type 'boolean
+  :group 'package+)
 
 (unless (fboundp 'package-desc-version)
   ;; provide compatibilty back to 24.3--hopefully.
@@ -193,12 +207,22 @@
   "Ensures MANIFEST is installed and uninstalls other packages.
 MANIFEST declares a list of packages that should be installed on
 this system, installing any missing packages and removing any
-installed packages that are not in the manifest.
+installed packages that are not in the manifest. After
+installation and cleanup, record the manifest in
+‘package-selected-packages’ so Emacs can track packages versus
+their dependencies.
 
 This makes it easy to keep a list of packages under version
 control and replicated across all your environments, without
 having to have all the packages themselves under version
-control."
+control.
+
+If automatic package cleanup is not desired, you can disable this
+functionality by setting package-disable-cleanup to t.
+
+If updating ‘package-selected-packages’ is not desired, you can
+disable this functionality by setting package-disable-record to
+t."
   (package-initialize)
 
   (unless package-archive-contents    ; why? package-install has this.
@@ -206,7 +230,25 @@ control."
 
   (mapc 'package-maybe-install (package-transitive-closure manifest))
 
-  (unless (boundp 'package-disable-cleanup) (package-cleanup manifest)))
+  (unless package-disable-cleanup (package-cleanup manifest))
+  (unless package-disable-record  (package+-update-selected-packages manifest)))
+
+;;;###autoload
+(defun package-view-manifest ()
+  "Pop up a buffer listing out all installed packages with their dependencies."
+  (interactive)
+  (with-help-window "my-packages"
+    (with-current-buffer "my-packages"
+      (cl-prettyprint (package-manifest-with-deps package-selected-packages)))))
+
+(defun package+-update-selected-packages (manifest)
+  "Record the MANIFEST in ‘package-selected-packages’.
+This lets Emacs track packages versus their dependencies."
+  (let ((manifest (sort manifest 'symbol<)))
+    (add-hook 'after-init-hook
+              (lambda ()
+                (unless (equal package-selected-packages manifest)
+                  (customize-save-variable 'package-selected-packages manifest))))))
 
 ;; stolen (and modified) from:
 ;; https://github.com/dimitri/el-get/blob/master/el-get-dependencies.el
