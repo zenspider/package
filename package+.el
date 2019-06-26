@@ -3,11 +3,13 @@
 ;; Copyright (C) Ryan Davis
 
 ;; Author: Ryan Davis <ryand-ruby@zenspider.com>
+;; Created: 2013-07-25
 ;; Keywords: extensions, tools
-;; Package-Requires: ()
+;; Package-Requires: ((emacs "24.3"))
 ;; URL: TBA
 ;; Doc URL: TBA
-;; Compatibility: GNU Emacs: 24.3?, 24.4
+;; Compatibility: GNU Emacs: 24.3?, 24.4+
+;; Version: 1.1.0
 
 ;;; The MIT License:
 
@@ -107,6 +109,7 @@
     "Extract version from a package description vector."
     (aref desc 0)))
 
+;; I was hoping this would go upstream, but I don't think it's gonna happen...
 (unless (fboundp 'package-cleanup)
   (require 'cl)
 
@@ -150,13 +153,13 @@
     (cons pkg (sort (mapcar 'car (package-deps-for pkg)) 'symbol<)))
 
   (defun flatten (lists)
-    (mapcan (lambda (x) (if (listp x) (flatten x) (list x))) lists))
+    (apply #'append lists))
 
   (defun package-transitive-closure (pkgs)
     (car
      (package+/topological-sort
       (mapcar 'map-to-package-deps
-              (sort (delete-duplicates
+              (sort (delete-dups
                      (flatten (mapcar 'map-to-package-deps pkgs)))
                     'symbol<)))))
 
@@ -253,6 +256,14 @@ This lets Emacs track packages versus their dependencies."
 ;; stolen (and modified) from:
 ;; https://github.com/dimitri/el-get/blob/master/el-get-dependencies.el
 (defun package+/topological-sort (graph)
+  "Return a list of packages to install in order.
+GRAPH is an association list whose keys are objects and whose
+values are lists of objects on which the corresponding key depends.
+Test is used to compare elements, and should be a suitable test for
+hash-tables.  Topological-sort returns two values.  The first is a
+list of objects sorted toplogically.  The second is a boolean
+indicating whether all of the objects in the input graph are present
+in the topological ordering (i.e., the first value)."
   (let* ((entries (make-hash-table))
          ;; avoid obsolete `flet' & backward-incompatible `cl-flet'
          (entry (lambda (v)
