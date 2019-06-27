@@ -93,6 +93,9 @@
 
 (require 'package)
 
+(eval-and-compile
+  (require 'cl))
+
 (defcustom package-disable-cleanup nil
   "Disable automatic cleanup of undeclared packages and their dependencies."
   :type 'boolean
