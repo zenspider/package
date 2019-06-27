@@ -6,8 +6,7 @@
 ;; Created: 2013-07-25
 ;; Keywords: extensions, tools
 ;; Package-Requires: ((emacs "24.3"))
-;; URL: TBA
-;; Doc URL: TBA
+;; URL: https://github.com/zenspider/package
 ;; Compatibility: GNU Emacs: 24.3?, 24.4+
 ;; Version: 1.1.0
 
