@@ -198,8 +198,8 @@
            (removes (seq-filter
                      (lambda (name) (assoc name package-alist))
                      (cl-set-difference
-                      (topo (package-manifest-with-deps (mapcar 'car package-alist)))
-                      (topo (package-manifest-with-deps packages))))))
+                      (topo haves)
+                      (topo wants)))))
       (message "Removing packages: %S" removes)
       (mapc 'package-delete-by-name (reverse removes))
       ))) ; (unless (fboundp 'package-cleanup)
