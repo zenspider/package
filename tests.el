@@ -41,7 +41,8 @@
   (should (equal (package-deps-for 'emacs)
                  nil))
   (should (equal (package-deps-for 'racket-mode) ; FIX
-                 '((emacs (24 3)) (faceup (0 0 2)) (s (1 9 0))))))
+                 '((emacs (24 3))
+                   (faceup (0 0 2))))))
 
 (erm-test test-package-details-for
   (should (equal (package-details-for 'emacs)
@@ -66,20 +67,20 @@
   (should (equal (package-installed-with-deps
                   (assoc-many '(dash emacs gh logito marshal ht pcache s) package-archive-contents))
                  '((dash)
-                   (gh dash emacs logito marshal pcache s)
+                   (gh emacs logito marshal pcache)
                    (ht dash)
                    (logito eieio)
                    (marshal eieio ht json)
                    (pcache eieio)
                    (s)))))
 
-(erm-test test-package-installed-with-deps/ag+gh
+(erm-test test-package-installed-with-deps/ag/gh
   (should (equal (package-installed-with-deps
                   (assoc-many '(ag cl-lib dash gh emacs ht logito marshal pcache s)
                               package-archive-contents))
                  '((ag cl-lib dash s)
                    (dash)
-                   (gh dash emacs logito marshal pcache s)
+                   (gh emacs logito marshal pcache)
                    (ht dash)
                    (logito eieio)
                    (marshal eieio ht json)
@@ -107,15 +108,13 @@
 
 (erm-test test-package-manifest-with-deps/gh
   (should (equal (package-manifest-with-deps '(gh))
-                 '((dash)
-                   (gh dash emacs logito marshal pcache s)
+                 '((gh emacs logito marshal pcache)
                    (ht dash)
                    (logito eieio)
                    (marshal eieio ht json)
-                   (pcache eieio)
-                   (s)))))
+                   (pcache eieio)))))
 
-(erm-test test-package-manifest-with-deps/ag+gh
+(erm-test test-package-manifest-with-deps/ag/gh
   (should (equal (package-manifest-with-deps '(ag gh))
                  (sort (cl-remove-duplicates
                         (cl-union (package-manifest-with-deps '(ag))
@@ -138,14 +137,14 @@
 
 (erm-test test-package-transitive-closure/gh
   (should (equal (package-transitive-closure '(gh))
-                 '(dash emacs s eieio logito pcache ht json marshal gh))))
+                 '(emacs eieio logito pcache ht json marshal gh))))
 
-(erm-test test-package-transitive-closure/ag+gh
+(erm-test test-package-transitive-closure/ag/gh
   (should (equal (package-transitive-closure '(ag gh))
                  '(cl-lib dash s ag emacs eieio logito pcache ht json marshal gh))))
 
 (erm-test test-package-version-for
-  (should (equal '(20170617 1942)       ; FIX this will fail quickly w/o fixtures
+  (should (equal '(20191023 1526)       ; FIX this will fail quickly w/o fixtures
                  (package-version-for 'racket-mode))))
 
 (erm-test test-package+/topological-sort
