@@ -111,100 +111,96 @@
     "Extract version from a package description vector."
     (aref desc 0)))
 
-;; I was hoping this would go upstream, but I don't think it's gonna happen...
-(unless (fboundp 'package-cleanup)
-  (require 'cl)
+(defun symbol< (a b) (string< (symbol-name a) (symbol-name b)))
 
-  (defun symbol< (a b) (string< (symbol-name a) (symbol-name b)))
+(defun symbol-list< (a b) (symbol< (car a) (car b)))
 
-  (defun symbol-list< (a b) (symbol< (car a) (car b)))
+(defun package-details-for (name)
+  (let ((v (cdr (assoc name (append package-alist package-archive-contents)))))
+    (and v (if (consp v)
+               (car v)                ; emacs 24+
+             v))))                    ; emacs 23
 
-  (defun package-details-for (name)
-    (let ((v (cdr (assoc name (append package-alist package-archive-contents)))))
-      (and v (if (consp v)
-                 (car v)                ; emacs 24+
-               v))))                    ; emacs 23
+;; TODO
+;; (cdr (assoc 'gh (append package-alist package-archive-contents)))
+;; (alist-get 'gh (append package-alist package-archive-contents))
 
-  ;; TODO
-  ;; (cdr (assoc 'gh (append package-alist package-archive-contents)))
-  ;; (alist-get 'gh (append package-alist package-archive-contents))
+(defun package-version-for (name)
+  "Returns the installed version for a package with a given NAME."
+  (package-desc-version (package-details-for name)))
 
-  (defun package-version-for (name)
-    "Returns the installed version for a package with a given NAME."
-    (package-desc-version (package-details-for name)))
+(defun package-delete-by-name (name)
+  "Deletes a package by NAME"
+  (message "Removing %s" name)
+  (package-delete (package-details-for name)))
 
-  (defun package-delete-by-name (name)
-    "Deletes a package by NAME"
-    (message "Removing %s" name)
-    (package-delete (package-details-for name)))
+(defun package-maybe-install (name)
+  "Installs a package by NAME, but only if it isn't already installed."
+  (unless (package-installed-p name)
+    (message "Installing %s" name)
+    (package-install name)))
 
-  (defun package-maybe-install (name)
-    "Installs a package by NAME, but only if it isn't already installed."
-    (unless (package-installed-p name)
-      (message "Installing %s" name)
-      (package-install name)))
+(defun package-deps-for (pkg)
+  "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
+  (unless package-archive-contents
+    (package-refresh-contents))
+  (let ((v (package-details-for pkg)))
+    (and v (package-desc-reqs v))))
 
-  (defun package-deps-for (pkg)
-    "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
-    (unless package-archive-contents
-      (package-refresh-contents))
-    (let ((v (package-details-for pkg)))
-      (and v (package-desc-reqs v))))
+(defun map-to-package-deps (pkg)
+  (cons pkg (sort (mapcar 'car (package-deps-for pkg)) 'symbol<)))
 
-  (defun map-to-package-deps (pkg)
-    (cons pkg (sort (mapcar 'car (package-deps-for pkg)) 'symbol<)))
+(defun flatten (lists)
+  (apply #'append lists))
 
-  (defun flatten (lists)
-    (apply #'append lists))
+(defun package-transitive-closure (pkgs)
+  (car
+   (package+/topological-sort
+    (mapcar 'map-to-package-deps
+            (sort (delete-dups
+                   (flatten (mapcar 'map-to-package-deps pkgs)))
+                  'symbol<)))))
 
-  (defun package-transitive-closure (pkgs)
-    (car
-     (package+/topological-sort
-      (mapcar 'map-to-package-deps
-              (sort (delete-dups
-                     (flatten (mapcar 'map-to-package-deps pkgs)))
-                    'symbol<)))))
+(defun rwd-map-filter (pred map)
+  "FUCK YOU ORIGINAL map-filter FOR NOT BEING A MAP AT ALL"
+  (seq-filter (lambda (x) x)
+              (mapcar pred map)))
 
-  (defun rwd-map-filter (pred map)
-    "FUCK YOU ORIGINAL map-filter FOR NOT BEING A MAP AT ALL"
-    (seq-filter (lambda (x) x)
-                (mapcar pred map)))
+(defun package-installed-with-deps (&optional pkgs)
+  (sort
+   (rwd-map-filter (lambda (pair)
+                     (let ((x (and pair (cadr pair))))
+                       (and x (cons (package-desc-name x)
+                                    (sort (mapcar 'car (package-desc-reqs x))
+                                          'symbol<)))))
+                   (or pkgs package-alist))
+   'symbol-list<))
 
-  (defun package-installed-with-deps (&optional pkgs)
-    (sort
-     (rwd-map-filter (lambda (pair)
-                       (let ((x (and pair (cadr pair))))
-                         (and x (cons (package-desc-name x)
-                                      (sort (mapcar 'car (package-desc-reqs x))
+(defun package-manifest-with-deps (packages)
+  (sort
+   (rwd-map-filter (lambda (pkg)
+                     (let ((deps (package-deps-for pkg)))
+                       (and (assoc pkg package-archive-contents)
+                            (cons pkg (sort (mapcar 'car deps)
                                             'symbol<)))))
-                     (or pkgs package-alist))
-     'symbol-list<))
+                   (package-transitive-closure packages))
+   'symbol-list<))
 
-  (defun package-manifest-with-deps (packages)
-    (sort
-     (rwd-map-filter (lambda (pkg)
-                       (let ((deps (package-deps-for pkg)))
-                         (and (assoc pkg package-archive-contents)
-                              (cons pkg (sort (mapcar 'car deps)
-                                              'symbol<)))))
-                     (package-transitive-closure packages))
-     'symbol-list<))
+(defun topo (lst)
+  (car (package+/topological-sort lst)))
 
-  (defun topo (lst)
-    (car (package+/topological-sort lst)))
-
-  (defun package-cleanup (packages)
-    "Delete installed packages not explicitly declared in PACKAGES."
-    (let* ((haves (package-manifest-with-deps (mapcar 'car package-alist)))
-           (wants (package-manifest-with-deps packages))
-           (removes (seq-filter
-                     (lambda (name) (assoc name package-alist))
-                     (cl-set-difference
-                      (topo haves)
-                      (topo wants)))))
-      (message "Removing packages: %S" removes)
-      (mapc 'package-delete-by-name (reverse removes))
-      ))) ; (unless (fboundp 'package-cleanup)
+(defun package-cleanup (packages)
+  "Delete installed packages not explicitly declared in PACKAGES."
+  (let* ((haves (package-manifest-with-deps (mapcar 'car package-alist)))
+         (wants (package-manifest-with-deps packages))
+         (removes (seq-filter
+                   (lambda (name) (assoc name package-alist))
+                   (cl-set-difference
+                    (topo haves)
+                    (topo wants)))))
+    (message "Removing packages: %S" removes)
+    (mapc 'package-delete-by-name (reverse removes))
+    )) ; (unless (fboundp 'package-cleanup)
 
 
 ;;;###autoload
