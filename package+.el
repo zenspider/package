@@ -91,6 +91,7 @@
 ;;; Code:
 
 (require 'package)
+(require 'cl-extra)                     ; cl-prettyprint
 
 (eval-and-compile
   (require 'cl))
