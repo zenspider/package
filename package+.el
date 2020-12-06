@@ -256,19 +256,6 @@ This lets Emacs track packages versus their dependencies."
         (funcall updater)
       (add-hook 'after-init-hook updater))))
 
-(defun package+-update-selected-packages (manifest)
-  "Record the MANIFEST in ‘package-selected-packages’.
-This lets Emacs track packages versus their dependencies."
-  (let ((manifest (sort manifest 'symbol<)))
-    (if after-init-time
-        (unless (equal package-selected-packages manifest)
-          (customize-save-variable 'package-selected-packages manifest))
-      (add-hook 'after-init-hook
-                (lambda ()
-                  (unless (equal package-selected-packages manifest)
-                    (customize-save-variable 'package-selected-packages manifest)))))))
-
-
 ;; stolen (and modified) from:
 ;; https://github.com/dimitri/el-get/blob/master/el-get-dependencies.el
 (defun package+/topological-sort (graph)
