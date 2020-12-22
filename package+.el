@@ -139,7 +139,7 @@
   "Installs a package by NAME, but only if it isn't already installed."
   (unless (package-installed-p name)
     (message "Installing %s" name)
-    (package-install name)))
+    (package-install name package-disable-record)))
 
 (defun package-deps-for (pkg)
   "Returns the dependency list for PKG or nil if none or the PKG doesn't exist."
@@ -233,7 +233,6 @@ t."
   (mapc 'package-maybe-install (package-transitive-closure manifest))
 
   (unless package-disable-cleanup (package-cleanup manifest))
-  (unless package-disable-record  (package+-update-selected-packages manifest))
 
   (sort (package-transitive-closure manifest) 'symbol<))
 
@@ -244,17 +243,6 @@ t."
   (with-help-window "my-packages"
     (with-current-buffer "my-packages"
       (cl-prettyprint (package-manifest-with-deps package-selected-packages)))))
-
-(defun package+-update-selected-packages (manifest)
-  "Record the MANIFEST in ‘package-selected-packages’.
-This lets Emacs track packages versus their dependencies."
-  (let* ((manifest (sort manifest 'symbol<))
-         (updater (lambda ()
-                    (unless (equal package-selected-packages manifest)
-                      (customize-save-variable 'package-selected-packages manifest)))))
-    (if after-init-time
-        (funcall updater)
-      (add-hook 'after-init-hook updater))))
 
 ;; stolen (and modified) from:
 ;; https://github.com/dimitri/el-get/blob/master/el-get-dependencies.el
