@@ -122,10 +122,6 @@
                (car v)                ; emacs 24+
              v))))                    ; emacs 23
 
-;; TODO
-;; (cdr (assoc 'gh (append package-alist package-archive-contents)))
-;; (alist-get 'gh (append package-alist package-archive-contents))
-
 (defun package-version-for (name)
   "Returns the installed version for a package with a given NAME."
   (package-desc-version (package-details-for name)))
@@ -202,7 +198,6 @@
     (message "Removing packages: %S" removes)
     (mapc 'package-delete-by-name (reverse removes))
     )) ; (unless (fboundp 'package-cleanup)
-
 
 ;;;###autoload
 (defun package-manifest (&rest manifest)
