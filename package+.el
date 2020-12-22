@@ -225,6 +225,8 @@ functionality by setting package-disable-cleanup to t.
 If updating ‘package-selected-packages’ is not desired, you can
 disable this functionality by setting package-disable-record to
 t."
+  ;; do not conditionalize. must be loaded or closure
+  ;; calculation/installation breaks on `emacs` itself.
   (package-initialize)
 
   (unless package-archive-contents    ; why? package-install has this.
