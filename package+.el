@@ -135,6 +135,7 @@
   "Installs a package by NAME, but only if it isn't already installed."
   (unless (package-installed-p name)
     (message "Installing %s" name)
+    (setq package+-dirty t)
     (package-install name package-disable-record)))
 
 (defun package-deps-for (pkg)
@@ -227,7 +228,15 @@ t."
   (unless package-archive-contents    ; why? package-install has this.
     (package-refresh-contents))
 
+  (setq package+-dirty nil)
   (mapc 'package-maybe-install (package-transitive-closure manifest))
+
+  (when (and package-quickstart
+           package-quickstart-file
+           (or (not (file-readable-p package-quickstart-file))
+               package+-dirty))
+    (message "package+ auto-updating %s" package-quickstart-file)
+    (package-quickstart-refresh))
 
   (unless package-disable-cleanup (package-cleanup manifest))
 
