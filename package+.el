@@ -129,6 +129,7 @@
 (defun package-delete-by-name (name)
   "Deletes a package by NAME"
   (message "Removing %s" name)
+  (setq package+-dirty t)
   (package-delete (package-details-for name)))
 
 (defun package-maybe-install (name)
@@ -231,14 +232,14 @@ t."
   (setq package+-dirty nil)
   (mapc 'package-maybe-install (package-transitive-closure manifest))
 
+  (unless package-disable-cleanup (package-cleanup manifest))
+
   (when (and package-quickstart
            package-quickstart-file
            (or (not (file-readable-p package-quickstart-file))
                package+-dirty))
     (message "package+ auto-updating %s" package-quickstart-file)
     (package-quickstart-refresh))
-
-  (unless package-disable-cleanup (package-cleanup manifest))
 
   (sort (package-transitive-closure manifest) 'symbol<))
 
