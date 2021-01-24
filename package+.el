@@ -49,7 +49,7 @@
 ;;
 ;;    (package-initialize)
 ;;    (add-to-list 'package-archives
-;;      '("melpa" . "http://melpa.milkbox.net/packages/") t)
+;;      '("melpa" . "https://melpa.org/packages/") t)
 ;;    (unless (package-installed-p 'package+)
 ;;      (package-install 'package+))
 ;;
