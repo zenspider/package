@@ -8,19 +8,31 @@ end
 
 def emacs args
   emacs_cmd = Dir[
-    "/usr/local/bin/emacs",
-    "/{My,}Applications/Emacs.app/Contents/MacOS/Emacs" # homebrew
+    "/{My,}Applications/Emacs.app/Contents/MacOS/Emacs", # cask installs
+    "/opt/homebrew/bin/emacs",                           # M1 homebrew
+    "/usr/local/bin/emacs",                              # old homebrew
+    "/usr/bin/emacs",                                    # linux
   ].first || "emacs" # trust the path
 
-  run %Q[#{emacs_cmd} #{args}]
+  run %Q[#{emacs_cmd} -Q -L . #{args}]
 end
 
 def emacs_test args
-  emacs "-Q -l tests.el #{args}"
+  emacs "-l tests.el #{args}"
 end
 
-task :compile do
-  emacs "--batch -f batch-byte-compile package+.el"
+el_files = Rake::FileList['**/*.el']
+
+task compile: el_files.ext('.elc')
+
+desc "byte compile the project. Helps drive out warnings, but also faster."
+rule '.elc' => '.el' do |t|
+  emacs "--batch -f batch-byte-compile #{t.source}"
+end
+
+desc "Clean the project"
+task :clean do
+  rm_f Dir["**/*~", "**/*.elc"]
 end
 
 task :test => "test:all"
