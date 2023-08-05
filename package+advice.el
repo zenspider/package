@@ -43,6 +43,14 @@
 (defun package+-disable-package-selected-packages ()
   "Add advice to disable saving package-selected-packages to customize."
   (interactive)
+
+  ;; (customize-save-variable 'package-selected-packages nil)
+  (let ((symbol 'package-selected-packages))
+    (when (or (get symbol 'saved-value) (get symbol 'saved-variable-comment))
+      (put symbol 'saved-value nil)
+      (put symbol 'saved-variable-comment nil)
+      (custom-save-all)))
+
   (advice-add 'customize-save-variable :around
               #'package+/customize-save-variable/packages))
 
