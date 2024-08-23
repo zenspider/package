@@ -33,6 +33,9 @@
 ;; Provides advice to enable/disable saving
 ;; `package-selected-packages` to custom.
 
+(eval-and-compile
+  (require 'package))
+
 (defun package+/customize-save-variable/packages (oldfn variable value &optional comment)
   "Bypass using customize-save-variable when saving package-selected-packages."
   (if (eq variable 'package-selected-packages)

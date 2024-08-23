@@ -1,4 +1,5 @@
-(load-file "package+.el")
+(eval-and-compile
+  (load-file "package+.el"))
 
 (setq package-archives (remove (assoc "gnu" package-archives) package-archives))
 (dolist (repo '(("melpa" . "http://melpa.org/packages/")))
@@ -155,16 +156,16 @@
                  (package-version-for 'racket-mode))))
 
 (erm-test test-package+/topological-sort
-  (setq deps '((ag cl-lib dash s)
-               (dash)
-               (gh dash emacs logito marshal pcache s)
-               (ht dash)
-               (logito eieio)
-               (marshal eieio ht json)
-               (pcache eieio)
-               (s)))
-  (should (equal (car (package+/topological-sort deps))
-                 '(cl-lib dash ht s ag emacs eieio logito pcache json marshal gh))))
+  (let ((deps '((ag cl-lib dash s)
+                (dash)
+                (gh dash emacs logito marshal pcache s)
+                (ht dash)
+                (logito eieio)
+                (marshal eieio ht json)
+                (pcache eieio)
+                (s))))
+    (should (equal (car (package+/topological-sort deps))
+                   '(cl-lib dash ht s ag emacs eieio logito pcache json marshal gh)))))
 
 (erm-test test-symbol<
   (should (equal (sort '(z y x) 'symbol<)

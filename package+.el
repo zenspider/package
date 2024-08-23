@@ -106,6 +106,8 @@
   :type 'boolean
   :group 'package+)
 
+(defvar package+-dirty nil)
+
 (unless (fboundp 'package-desc-version)
   ;; provide compatibilty back to 24.3--hopefully.
   (defsubst package-desc-version (desc)
@@ -272,26 +274,26 @@ in the topological ordering (i.e., the first value)."
                       (puthash v (cons 0 '()) entries)))))
     ;; populate entries initially
     (dolist (gvertex graph)
-      (destructuring-bind (vertex &rest dependencies) gvertex
+      (cl-destructuring-bind (vertex &rest dependencies) gvertex
         (let ((ventry (funcall entry vertex)))
           (dolist (dependency dependencies)
             (let ((dentry (funcall entry dependency)))
               (unless (eql dependency vertex)
-                (incf (car ventry))
+                (cl-incf (car ventry))
                 (push vertex (cdr dentry))))))))
     ;; L is the list of sorted elements, and S the set of vertices
     ;; with no outstanding dependencies.
     (let ((L '())
-          (S (loop for entry being each hash-value of entries
+          (S (cl-loop for entry being each hash-value of entries
                    using (hash-key vertex)
                    when (zerop (car entry)) collect vertex)))
       ;; Until there are no vertices with no outstanding dependencies,
       ;; process vertices from S, adding them to L.
-      (do* () ((endp S))
+      (cl-do* () ((cl-endp S))
         (let* ((v (pop S)) (ventry (funcall entry v)))
           (remhash v entries)
           (dolist (dependant (cdr ventry) (push v L))
-            (when (zerop (decf (car (funcall entry dependant))))
+            (when (zerop (cl-decf (car (funcall entry dependant))))
               (push dependant S)))))
       ;; return (1) the list of sorted items, (2) whether all items
       ;; were sorted, and (3) if there were unsorted vertices, the
